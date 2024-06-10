@@ -53,7 +53,7 @@ def reverse_tensor(x):
 
 def sample_chain(args, device, flow, n_tries, dataset_info, prop_dist=None):
     n_samples = 1
-    if args.dataset == 'qm9' or args.dataset == 'qm9_second_half' or args.dataset == 'qm9_first_half':
+    if args.dataset == 'qm9' or args.dataset == 'TB' or args.dataset == 'qm9_second_half' or args.dataset == 'qm9_first_half':
         n_nodes = 19
     elif args.dataset == 'geom':
         n_nodes = 44
@@ -62,9 +62,10 @@ def sample_chain(args, device, flow, n_tries, dataset_info, prop_dist=None):
 
     # TODO FIX: This conditioning just zeros.
     if args.context_node_nf > 0:
-        context = prop_dist.sample(n_nodes).unsqueeze(1).unsqueeze(0)
-        context = context.repeat(1, n_nodes, 1).to(device)
-        #context = torch.zeros(n_samples, n_nodes, args.context_node_nf).to(device)
+        #context = torch.tensor([1]).unsqueeze(1).repeat(1, max_n_nodes, 1).to(device) * node_mask
+        # context = prop_dist.sample(n_nodes).unsqueeze(1).unsqueeze(0)
+        # context = context.repeat(1, n_nodes, 1).to(device)
+        context = torch.zeros(n_samples, n_nodes, args.context_node_nf).to(device)
     else:
         context = None
 
@@ -126,12 +127,12 @@ def sample(args, device, generative_model, dataset_info,
     edge_mask *= diag_mask
     edge_mask = edge_mask.view(batch_size * max_n_nodes * max_n_nodes, 1).to(device)
     node_mask = node_mask.unsqueeze(2).to(device)
-
-    # TODO FIX: This conditioning just zeros.
+    #Context will be hard-coded to 1 since we want to sample inhibitory molecules
     if args.context_node_nf > 0:
-        if context is None:
-            context = prop_dist.sample_batch(nodesxsample)
-        context = context.unsqueeze(1).repeat(1, max_n_nodes, 1).to(device) * node_mask
+        context = torch.tensor([0]).unsqueeze(1).repeat(1, max_n_nodes, 1).to(device) * node_mask
+        # if context is None:
+        #     context = prop_dist.sample_batch(nodesxsample)
+        # context = context.unsqueeze(1).repeat(1, max_n_nodes, 1).to(device) * node_mask
     else:
         context = None
 

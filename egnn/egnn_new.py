@@ -186,10 +186,25 @@ class EGNN(nn.Module):
         distances, _ = coord2diff(x, edge_index)
         if self.sin_embedding is not None:
             distances = self.sin_embedding(distances)
+        print(f'Distances max is {distances.max()}')
+        print(f'Distances mean is {distances.mean()}')
+        print(f"Num distances greater than 70 {(distances > 70).sum()}")
+        # if (distances > 70).sum() > 100:
+        #     import pdb; pdb.set_trace()
+        print(f'EGNN H max is {h.max()}')
+        print(f'EGNN X max is {x.max()}')
+        print(f'Number of edges {edge_mask.sum()}')
+        #import pdb; pdb.set_trace()
         h = self.embedding(h)
         for i in range(0, self.n_layers):
             h, x = self._modules["e_block_%d" % i](h, x, edge_index, node_mask=node_mask, edge_mask=edge_mask, edge_attr=distances)
+            print(h.max())
+        #import pdb; pdb.set_trace()
+        print(f'EGNN H max after is {h.max()}')
+        print(f'EGNN X max after is {x.max()}')
 
+        # if h.max() > 1000:
+        #     import pdb; pdb.set_trace()
         # Important, the bias of the last linear might be non-zero
         h = self.embedding_out(h)
         if node_mask is not None:

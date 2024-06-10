@@ -106,13 +106,15 @@ def plot_molecule(ax, positions, atom_type, alpha, spheres_3d, hex_bg_color,
 
     # ax.set_facecolor((1.0, 0.47, 0.42))
     colors_dic = np.array(dataset_info['colors_dic'])
-    radius_dic = np.array(dataset_info['radius_dic'])
+    radius_dic = np.array([0.46] + [0.77]*(len(colors_dic) - 1))
     area_dic = 1500 * radius_dic ** 2
     # areas_dic = sizes_dic * sizes_dic * 3.1416
 
     areas = area_dic[atom_type]
     radii = radius_dic[atom_type]
     colors = colors_dic[atom_type]
+    radii = radius_dic[atom_type]
+    #radii = [0.46] + [0.77]*(len(colors) - 1)
 
     if spheres_3d:
         for i, j, k, s, c in zip(x, y, z, radii, colors):
@@ -131,7 +133,7 @@ def plot_molecule(ax, positions, atom_type, alpha, spheres_3d, hex_bg_color,
             s = sorted((atom_type[i], atom_type[j]))
             pair = (dataset_info['atom_decoder'][s[0]],
                     dataset_info['atom_decoder'][s[1]])
-            if 'qm9' in dataset_info['name']:
+            if 'qm9' in dataset_info['name'] or 'TB' in dataset_info['name']:
                 draw_edge_int = bond_analyze.get_bond_order(atom1, atom2, dist)
                 line_width = (3 - 2) * 2 * 2
             elif dataset_info['name'] == 'geom':
@@ -175,14 +177,14 @@ def plot_data3d(positions, atom_type, dataset_info, camera_elev=0, camera_azim=0
     ax._axis3don = False
 
     if bg == 'black':
-        ax.w_xaxis.line.set_color("black")
+        ax.xaxis.line.set_color("black")
     else:
-        ax.w_xaxis.line.set_color("white")
+        ax.xaxis.line.set_color("white")
 
     plot_molecule(ax, positions, atom_type, alpha, spheres_3d,
                   hex_bg_color, dataset_info)
 
-    if 'qm9' in dataset_info['name']:
+    if 'qm9' in dataset_info['name'] or 'TB' in dataset_info['name']:
         max_value = positions.abs().max().item()
 
         # axis_lim = 3.2

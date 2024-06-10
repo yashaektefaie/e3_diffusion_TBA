@@ -18,6 +18,14 @@ from qm9.analyze import check_stability
 from os.path import join
 from qm9.sampling import sample_chain, sample
 from configs.datasets_config import get_dataset_info
+import os
+import sys
+from rdkit.Chem import RDConfig
+sys.path.append(os.path.join(RDConfig.RDContribDir, 'SA_Score'))
+# now you can import sascore!
+import sascorer
+from rdkit import Chem
+from rdkit.Chem import AllChem
 
 
 def check_mask_correct(variables, node_mask):
@@ -45,13 +53,49 @@ def save_and_sample_chain(args, eval_args, device, flow,
 
     return one_hot, charges, x
 
-
 def sample_different_sizes_and_save(args, eval_args, device, generative_model,
                                     nodes_dist, dataset_info, n_samples=10):
     nodesxsample = nodes_dist.sample(n_samples)
+    #Samples n_samples number of nodes from random distribution 
     one_hot, charges, x, node_mask = sample(
         args, device, generative_model, dataset_info,
         nodesxsample=nodesxsample)
+    
+    res_mols = []
+    for i in range(n_samples):
+        num_atoms = int(node_mask[i:i+1].sum().item())
+        atom_type = one_hot[i:i+1, :num_atoms].argmax(2).squeeze(0).cpu().detach().numpy()
+        atom_decoder = dataset_info['atom_decoder']
+        atom_type = [atom_decoder[atom] for atom in atom_type]
+        #get atomic number for each atom in atom_type
+
+        pt = Chem.GetPeriodicTable()
+        atom_type = [pt.GetAtomicNumber(atom) for atom in atom_type]
+        x_squeeze = x[i:i+1, :num_atoms].squeeze(0).cpu().detach().numpy()
+        #mol_stable = check_stability(x_squeeze, atom_type, dataset_info)[0]
+
+        mol = Chem.rdchem.EditableMol(Chem.Mol())
+
+        for atomic_num in atom_type:
+            atom = Chem.Atom(int(atomic_num))
+            mol.AddAtom(atom)
+        
+        # Convert the editable molecule object to a regular molecule object
+        mol = mol.GetMol()
+
+        # Set the 3D coordinates of the atoms
+        conf = Chem.Conformer(mol.GetNumAtoms())
+        for i in range(mol.GetNumAtoms()):
+            conf.SetAtomPosition(i, [float(i) for i in list(x_squeeze[i])])
+        mol.AddConformer(conf)
+
+        # Generate a SMILES string for the molecule
+        smiles = Chem.MolToSmiles(mol)
+        print(f"Smiles {smiles}")
+        print(f"Synthesizability {sascorer.calculateScore(Chem.MolFromSmiles(smiles))}")
+        res_mols.append(smiles)
+
+    import pdb; pdb.set_trace()
 
     vis.save_xyz_file(
         join(eval_args.model_path, 'eval/molecules/'), one_hot, charges, x,

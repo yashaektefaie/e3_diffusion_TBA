@@ -206,7 +206,7 @@ def main_analyze_qm9(remove_h: bool, dataset_name='qm9', n_atoms=None):
 
 ############################
 # Validity and bond analysis
-def check_stability(positions, atom_type, dataset_info, debug=False):
+def check_stability(positions, atom_type, dataset_info, debug=True):
     assert len(positions.shape) == 2
     assert positions.shape[1] == 3
     atom_decoder = dataset_info['atom_decoder']
@@ -223,11 +223,12 @@ def check_stability(positions, atom_type, dataset_info, debug=False):
             dist = np.sqrt(np.sum((p1 - p2) ** 2))
             atom1, atom2 = atom_decoder[atom_type[i]], atom_decoder[atom_type[j]]
             pair = sorted([atom_type[i], atom_type[j]])
-            if dataset_info['name'] == 'qm9' or dataset_info['name'] == 'qm9_second_half' or dataset_info['name'] == 'qm9_first_half':
+            order = bond_analyze.get_bond_order(atom1, atom2, dist)
+            if dataset_info['name'] == 'qm9' or dataset_info['name'] == 'TB' or dataset_info['name'] == 'qm9_second_half' or dataset_info['name'] == 'qm9_first_half':
                 order = bond_analyze.get_bond_order(atom1, atom2, dist)
             elif dataset_info['name'] == 'geom':
                 order = bond_analyze.geom_predictor(
-                    (atom_decoder[pair[0]], atom_decoder[pair[1]]), dist)
+                    (atom_decoder[pair[0]], atom_decoder[pair[1]]), dist) 
             nr_bonds[i] += order
             nr_bonds[j] += order
     nr_stable_bonds = 0

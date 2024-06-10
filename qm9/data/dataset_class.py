@@ -29,7 +29,12 @@ class ProcessedDataset(Dataset):
         Does nothing for other datasets.
 
     """
-    def __init__(self, data, included_species=None, num_pts=-1, normalize=True, shuffle=True, subtract_thermo=True):
+    def __init__(self, data, 
+                 included_species=None, 
+                 num_pts=-1, 
+                 normalize=True, 
+                 shuffle=True, 
+                 subtract_thermo=True):
 
         self.data = data
 
@@ -58,13 +63,15 @@ class ProcessedDataset(Dataset):
                 data[key] -= data[key + '_thermo'].to(data[key].dtype)
 
         self.included_species = included_species
-
+        print(self.included_species)
+        #THIS IS WRONG WE WANT TO USE ATOM DECODER
         self.data['one_hot'] = self.data['charges'].unsqueeze(-1) == included_species.unsqueeze(0).unsqueeze(0)
 
         self.num_species = len(included_species)
         self.max_charge = max(included_species)
 
         self.parameters = {'num_species': self.num_species, 'max_charge': self.max_charge}
+        print(self.parameters)
 
         # Get a dictionary of statistics for all properties that are one-dimensional tensors.
         self.calc_stats()

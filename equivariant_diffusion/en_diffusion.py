@@ -454,6 +454,8 @@ class EnVariationalDiffusion(torch.nn.Module):
             error = sum_except_batch((eps - eps_t) ** 2) / denom
         else:
             error = sum_except_batch((eps - eps_t) ** 2)
+        # print(f'Error max {error.max()}')
+        #import pdb; pdb.set_trace()
         return error
 
     def log_constants_p_x_given_z0(self, x, node_mask):
@@ -565,7 +567,10 @@ class EnVariationalDiffusion(torch.nn.Module):
 
     def compute_loss(self, x, h, node_mask, edge_mask, context, t0_always):
         """Computes an estimator for the variational lower bound, or the simple loss (MSE)."""
-
+        # print(x.sum())
+        # print(h['categorical'].sum())
+        # print(h['integer'])
+        #print(h.sum())
         # This part is about whether to include loss term 0 always.
         if t0_always:
             # loss_term_0 will be computed separately.
@@ -600,6 +605,7 @@ class EnVariationalDiffusion(torch.nn.Module):
 
         # Concatenate x, h[integer] and h[categorical].
         xh = torch.cat([x, h['categorical'], h['integer']], dim=2)
+        #import pdb; pdb.set_trace()
         # Sample z_t given x, h for timestep t, from q(z_t | x, h)
         z_t = alpha_t * xh + sigma_t * eps
 
@@ -681,7 +687,6 @@ class EnVariationalDiffusion(torch.nn.Module):
             loss = kl_prior + estimator_loss_terms + neg_log_constants
 
         assert len(loss.shape) == 1, f'{loss.shape} has more than only batch dim.'
-
         return loss, {'t': t_int.squeeze(), 'loss_t': loss.squeeze(),
                       'error': error.squeeze()}
 

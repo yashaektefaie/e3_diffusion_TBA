@@ -105,11 +105,13 @@ class EGNN_dynamics_QM9(nn.Module):
             vel = remove_mean(vel)
         else:
             vel = remove_mean_with_mask(vel, node_mask.view(bs, n_nodes, 1))
-
+        #import pdb; pdb.set_trace()
         if h_dims == 0:
             return vel
         else:
             h_final = h_final.view(bs, n_nodes, -1)
+            # print(f'H-final max is {h_final.max()}')
+            # print(f'Vel max is {vel.max()}')
             return torch.cat([vel, h_final], dim=2)
 
     def get_adj_matrix(self, n_nodes, batch_size, device):

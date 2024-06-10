@@ -1,6 +1,10 @@
 # Bond lengths from:
 # http://www.wiredchemist.com/chemistry/data/bond_energies_lengths.html
 # And:
+
+#C-H used to be 109 now I made it 446
+#H-O used to be 457
+
 # http://chemistry-reference.com/tables/Bond%20Lengths%20and%20Enthalpies.pdf
 bonds1 = {'H': {'H': 74, 'C': 109, 'N': 101, 'O': 96, 'F': 92,
                 'B': 119, 'Si': 148, 'P': 144, 'As': 152, 'S': 134,
@@ -33,10 +37,10 @@ bonds1 = {'H': {'H': 74, 'C': 109, 'N': 101, 'O': 96, 'F': 92,
                 'S': 234, 'F': 187, 'I': 266},
           'As': {'H': 152}
           }
-
-bonds2 = {'C': {'C': 134, 'N': 129, 'O': 120, 'S': 160},
+#We change C to O to 126 from 120, 
+bonds2 = {'C': {'C': 134, 'N': 129, 'O': 126, 'S': 160},
           'N': {'C': 129, 'N': 125, 'O': 121},
-          'O': {'C': 120, 'N': 121, 'O': 121, 'P': 150},
+          'O': {'C': 126, 'N': 121, 'O': 121, 'P': 150},
           'P': {'O': 150, 'S': 186},
           'S': {'P': 186}}
 
@@ -90,15 +94,18 @@ def check_consistency_bond_dictionaries():
 
 
 stdv = {'H': 5, 'C': 1, 'N': 1, 'O': 2, 'F': 3}
-margin1, margin2, margin3 = 10, 5, 3
+#margin1, margin2, margin3 = 10, 5, 3
+margin1, margin2, margin3 = 10, 4, 3
 
-allowed_bonds = {'H': 1, 'C': 4, 'N': 3, 'O': 2, 'F': 1, 'B': 3, 'Al': 3,
+#For some reason said S is 4....no lol it is 2, that is basic chemistry?
+#Changing more based on molecules
+allowed_bonds = {'H': 1, 'C': [3,4], 'N': [2,3], 'O': 2, 'F': 1, 'B': 3, 'Al': 3,
                  'Si': 4, 'P': [3, 5],
-                 'S': 4, 'Cl': 1, 'As': 3, 'Br': 1, 'I': 1, 'Hg': [1, 2],
+                 'S': [2,4], 'Cl': 1, 'As': 3, 'Br': 1, 'I': 1, 'Hg': [1, 2],
                  'Bi': [3, 5]}
 
 
-def get_bond_order(atom1, atom2, distance, check_exists=False):
+def get_bond_order(atom1, atom2, distance, check_exists=True):
     distance = 100 * distance  # We change the metric
 
     # Check exists for large molecules where some atom pairs do not have a

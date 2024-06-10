@@ -6,7 +6,30 @@ import os
 
 
 def retrieve_dataloaders(cfg):
-    if 'qm9' in cfg.dataset:
+    if 'TB' in cfg.dataset:
+        batch_size = cfg.batch_size
+        num_workers = cfg.num_workers
+        filter_n_atoms = cfg.filter_n_atoms
+
+        args = init_argparse('qm9')
+        args, datasets, num_species, charge_scale = initialize_datasets(args, cfg.datadir, cfg.dataset,
+                                                                        subtract_thermo=args.subtract_thermo,
+                                                                        force_download=args.force_download,
+                                                                        remove_h=cfg.remove_h)
+    
+        if filter_n_atoms is not None:
+            print("Retrieving molecules with only %d atoms" % filter_n_atoms)
+            datasets = filter_atoms(datasets, filter_n_atoms)
+        
+        # Construct PyTorch dataloaders from datasets
+        preprocess = PreprocessQM9(load_charges=cfg.include_charges)
+        dataloaders = {split: DataLoader(dataset,
+                                         batch_size=batch_size,
+                                         shuffle=args.shuffle if (split == 'train') else False,
+                                         num_workers=num_workers,
+                                         collate_fn=preprocess.collate_fn)
+                             for split, dataset in datasets.items()}
+    elif 'qm9' in cfg.dataset:
         batch_size = cfg.batch_size
         num_workers = cfg.num_workers
         filter_n_atoms = cfg.filter_n_atoms
@@ -31,7 +54,8 @@ def retrieve_dataloaders(cfg):
         preprocess = PreprocessQM9(load_charges=cfg.include_charges)
         dataloaders = {split: DataLoader(dataset,
                                          batch_size=batch_size,
-                                         shuffle=args.shuffle if (split == 'train') else False,
+                                         #shuffle=args.shuffle if (split == 'train') else False,
+                                         shuffle = False,
                                          num_workers=num_workers,
                                          collate_fn=preprocess.collate_fn)
                              for split, dataset in datasets.items()}

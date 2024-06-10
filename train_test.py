@@ -24,7 +24,7 @@ def train_epoch(args, loader, epoch, model, model_dp, model_ema, ema, device, dt
         edge_mask = data['edge_mask'].to(device, dtype)
         one_hot = data['one_hot'].to(device, dtype)
         charges = (data['charges'] if args.include_charges else torch.zeros(0)).to(device, dtype)
-
+        print(f"{data['one_hot'].int()[node_mask.bool().cpu().squeeze(2)].argmax(axis=1)}")
         x = remove_mean_with_mask(x, node_mask)
 
         if args.augment_noise > 0:
@@ -40,13 +40,14 @@ def train_epoch(args, loader, epoch, model, model_dp, model_ema, ema, device, dt
         assert_mean_zero_with_mask(x, node_mask)
 
         h = {'categorical': one_hot, 'integer': charges}
+        #import pdb; pdb.set_trace()
 
         if len(args.conditioning) > 0:
             context = qm9utils.prepare_context(args.conditioning, data, property_norms).to(device, dtype)
             assert_correctly_masked(context, node_mask)
         else:
             context = None
-
+        
         optim.zero_grad()
 
         # transform batch through flow
@@ -83,11 +84,11 @@ def train_epoch(args, loader, epoch, model, model_dp, model_ema, ema, device, dt
                                             prop_dist, epoch=epoch)
             print(f'Sampling took {time.time() - start:.2f} seconds')
 
-            vis.visualize(f"outputs/{args.exp_name}/epoch_{epoch}_{i}", dataset_info=dataset_info, wandb=wandb)
-            vis.visualize_chain(f"outputs/{args.exp_name}/epoch_{epoch}_{i}/chain/", dataset_info, wandb=wandb)
-            if len(args.conditioning) > 0:
-                vis.visualize_chain("outputs/%s/epoch_%d/conditional/" % (args.exp_name, epoch), dataset_info,
-                                    wandb=wandb, mode='conditional')
+            # vis.visualize(f"outputs/{args.exp_name}/epoch_{epoch}_{i}", dataset_info=dataset_info, wandb=wandb)
+            # vis.visualize_chain(f"outputs/{args.exp_name}/epoch_{epoch}_{i}/chain/", dataset_info, wandb=wandb)
+            # if len(args.conditioning) > 0:
+            #     vis.visualize_chain("outputs/%s/epoch_%d/conditional/" % (args.exp_name, epoch), dataset_info,
+            #                         wandb=wandb, mode='conditional')
         wandb.log({"Batch NLL": nll.item()}, commit=True)
         if args.break_train_epoch:
             break
@@ -123,7 +124,7 @@ def test(args, loader, epoch, eval_model, device, dtype, property_norms, nodes_d
                                                                     node_mask)
                 x = x + eps * args.augment_noise
 
-            x = remove_mean_with_mask(x, node_mask)
+            #x = remove_mean_with_mask(x, node_mask)
             check_mask_correct([x, one_hot, charges], node_mask)
             assert_mean_zero_with_mask(x, node_mask)
 

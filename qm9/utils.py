@@ -4,7 +4,7 @@ import torch
 def compute_mean_mad(dataloaders, properties, dataset_name):
     if dataset_name == 'qm9':
         return compute_mean_mad_from_dataloader(dataloaders['train'], properties)
-    elif dataset_name == 'qm9_second_half' or dataset_name == 'qm9_second_half':
+    elif dataset_name == 'qm9_second_half' or dataset_name == 'qm9_second_half' or dataset_name == 'TB':
         return compute_mean_mad_from_dataloader(dataloaders['valid'], properties)
     else:
         raise Exception('Wrong dataset name')

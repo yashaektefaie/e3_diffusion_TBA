@@ -55,18 +55,24 @@ def initialize_datasets(args, datadir, dataset, subset=None, splits=None,
     num_pts = {'train': args.num_train,
                'test': args.num_test, 'valid': args.num_valid}
 
-    # Download and process dataset. Returns datafiles.
-    datafiles = prepare_dataset(
-        datadir, 'qm9', subset, splits, force_download=force_download)
+    if dataset == 'TB':
+        datasets = {}
+        datasets['train'] = torch.load('/n/holystore01/LABS/mzitnik_lab/Users/yektefaie/e3_diffusion_for_molecules/tb_data/train_dataset.pt')
+        datasets['valid'] = torch.load('/n/holystore01/LABS/mzitnik_lab/Users/yektefaie/e3_diffusion_for_molecules/tb_data/val_dataset.pt')
+        datasets['test'] = torch.load('/n/holystore01/LABS/mzitnik_lab/Users/yektefaie/e3_diffusion_for_molecules/tb_data/test_dataset.pt')
+    else:
+        # Download and process dataset. Returns datafiles.
+        datafiles = prepare_dataset(
+            datadir, 'qm9', subset, splits, force_download=force_download)
 
-    # Load downloaded/processed datasets
-    datasets = {}
-    for split, datafile in datafiles.items():
-        with np.load(datafile) as f:
-            datasets[split] = {key: torch.from_numpy(
-                val) for key, val in f.items()}
-
-    if dataset != 'qm9':
+        # Load downloaded/processed datasets
+        datasets = {}
+        for split, datafile in datafiles.items():
+            with np.load(datafile) as f:
+                datasets[split] = {key: torch.from_numpy(
+                    val) for key, val in f.items()}
+                
+    if dataset != 'qm9' and dataset != 'TB':
         np.random.seed(42)
         fixed_perm = np.random.permutation(len(datasets['train']['num_atoms']))
         if dataset == 'qm9_second_half':
@@ -111,6 +117,7 @@ def initialize_datasets(args, datadir, dataset, subset=None, splits=None,
 
     # Get a list of all species across the entire dataset
     all_species = _get_species(datasets, ignore_check=False)
+    print(f"All detected species {all_species}")
 
     # Now initialize MolecularDataset based upon loaded data
     datasets = {split: ProcessedDataset(data, num_pts=num_pts.get(
